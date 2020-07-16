@@ -9,9 +9,10 @@ namespace csharpsockets
     class SERVER_SIDE
     {
         static Socket server;
-        public static int Main(string[] args)
+        static Socket client;
+        public static void Main(string[] args)
         {
-            Console.WriteLine("SERVER TERMINAL");
+            Console.WriteLine("[SERVER TERMINAL]");
 
             server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             string host = Dns.GetHostName();
@@ -24,14 +25,25 @@ namespace csharpsockets
             server.Listen(5);
             Console.WriteLine("server connected");
 
+            getClients();
+        }
+
+        static void  getClients() {
             while (true) {
-                Socket client = server.Accept();
+                client = server.Accept();
                 IPEndPoint clientEndPoint = client.RemoteEndPoint as IPEndPoint;
 
-                Console.WriteLine("client connected from " + clientEndPoint.Address);
-                byte[] welcomeBytes = Encoding.ASCII.GetBytes("welcome to the server");
+                Console.WriteLine("client connected from [IP: {0}, PORT: {1}]", clientEndPoint.Address, clientEndPoint.Port);
+                string message = "welcome to the server";
 
-                client.Send(welcomeBytes);
+                byte[] welcomeBytes = Encoding.UTF8.GetBytes(message);
+                byte[] bytes = new byte[1024];
+
+                int i = client.Send(welcomeBytes);
+                Console.WriteLine("Sent {0} bytes, message sent: '{1}'", i, message);
+                i = client.Receive(bytes);
+                Console.WriteLine(Encoding.UTF8.GetString(bytes));
+
                 Thread.Sleep(100);
             }
         }
